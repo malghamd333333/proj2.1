@@ -93,13 +93,12 @@ def create_app(test_config=None):
     def delete_question(question_id):
 
         try:
-            curr_question = Question.query.filter_by(id=question_id).first_or_404()
             Question.query.filter_by(id=question_id).delete()
             db.session.commit()
             return jsonify({
                 "success": True,
                 "data": "delete",
-                "book_id": question_id
+                "deleted": question_id
             })
         except:
             abort(400)
@@ -279,11 +278,6 @@ def create_app(test_config=None):
 
         differences = set(query_ids) - set(previous_id)
         new_ids = list(differences)
-
-        print("Previous_id == ")
-        print(previous_id)
-        print("newIDs == ")
-        print(new_ids)
 
         rand = random.randint(0, len(new_ids))
         selected_id = new_ids[rand]

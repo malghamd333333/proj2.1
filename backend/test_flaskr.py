@@ -18,6 +18,13 @@ class TriviaTestCase(unittest.TestCase):
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
+        self.question = {
+            "question": "question test",
+            "answer": "answer test",
+            "category": "3",
+            "difficulty": "2",
+        }
+
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -44,7 +51,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
 
     def test_404_sent_requesting_beyond_valid_page(self):
-        res = self.client().get('/books?page=1000')
+        res = self.client().get('/question?page=1000')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
@@ -58,9 +65,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 1)
+        self.assertEqual(data['deleted'], 2)
         self.assertEqual(question, None)
-
 
     def test_404_if_categories_does_not_exist(self):
         res = self.client().get('/categories/1000')
@@ -71,25 +77,21 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'resource not found')
 
     def test_add_new_question(self):
-        res = self.client().post('/addquestions', json=self.new_q)
+        res = self.client().post('/addquestions', json=self.question)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
 
-
     def test_add_new_question_not_allowed(self):
-        res = self.client().post('/addquestions/44', json=self.new_q)
+        res = self.client().post('/addquestions/44', json=self.question)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 405)
+        self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'method not allowed')
+        self.assertEqual(data['message'], 'resource not found')
 
-    # def test_422_if_book_creation_fails(self):
-    #     res = self.client().post('/books', json=self.new_book)
-    #     data = json.loads(res.data)
-    #     pass
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
