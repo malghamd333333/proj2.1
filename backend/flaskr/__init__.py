@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, abort, jsonify ,render_template
+from flask import Flask, request, abort, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 import random
@@ -15,15 +15,10 @@ def create_app(test_config=None):
     setup_db(app)
     with app.app_context():
         db.create_all()
-    '''
-  @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-  '''
+
 
     cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-    '''
-  @TODO: Use the after_request decorator to set Access-Control-Allow
-  '''
 
     @app.after_request
     def after_request(response):
@@ -31,24 +26,7 @@ def create_app(test_config=None):
         response.headers.add("Access-Control-Allow-Headers", "GET , POST , PATCH , DELETE , OPTIONS")
         return response
 
-    '''
-  @TODO: 
-  Create an endpoint to handle GET requests 
-  for all available categories.
-  '''
 
-    '''
-  @TODO: 
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
-
-  TEST: At this point, when you start the application
-  you should see questions and categories generated,
-  ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
-  '''
 
     @app.route("/getquestions", methods=['GET', 'POST'])
     def get_quesions():
@@ -80,18 +58,12 @@ def create_app(test_config=None):
             #   "current_category": catagory_arr,
         })
 
-    '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
 
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
-  '''
 
     # curl http://127.0.0.1:5000/questionsdelete/2
     @app.route('/questionsdelete/<int:question_id>', methods=["GET", "DELETE"])
     def delete_question(question_id):
-
+        Question.query.filter_by(id=question_id).first_or_404()
         try:
             Question.query.filter_by(id=question_id).delete()
             db.session.commit()
@@ -101,31 +73,23 @@ def create_app(test_config=None):
                 "deleted": question_id
             })
         except:
-            abort(400)
+            abort(404)
 
-    '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
-
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  '''
 
     # curl -d '{"question":"Java3322" , "answer":"Antony222" , "difficulty":"2" , "category":"2" }' -H "Content-Type: application/json" -X POST http://127.0.0.1:5000/addquestions
     # curl http://127.0.0.1:5000/addquestions -X POST -H "Content-Type: application/json" -d "{\"question\": \"test\", \"answer\":\"test\", \"category\":\"4\", \"difficulty\":\"3\"}"
 
-    @app.route("/addquestions", methods=["GET", "POST"])
+    @app.route("/addquestions", methods=["POST"])
     def add_question():
 
         body_allData = request.get_json()
+        question = body_allData.get("question")
+        answer = body_allData.get("answer")
+        difficulty = body_allData.get("difficulty")
+        category = body_allData.get("category")
+        if not question or not answer:
+            abort(422)
         try:
-            question = body_allData.get("question", None)
-            answer = body_allData.get("answer", None)
-            difficulty = body_allData.get("difficulty", None)
-            category = body_allData.get("category", None)
             new_q = Question(question, answer, category, int(difficulty))
             Question.insert(new_q)
             return jsonify({
@@ -135,16 +99,6 @@ def create_app(test_config=None):
         except:
             abort(422)
 
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
 
     # curl -d '{"searchTerm":"aa"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:5000/questionssearch
     @app.route("/questionssearch", methods=['GET', 'POST'])
@@ -177,14 +131,6 @@ def create_app(test_config=None):
         except:
             abort(422)
 
-    '''
-  @TODO: 
-  Create a GET endpoint to get questions based on category. 
-
-  TEST: In the "List" tab / main screen, clicking on one of the 
-  categories in the left column will cause only questions of that 
-  category to be shown. 
-  '''
 
     # curl http://127.0.0.1:5000/categories/2/questions
     @app.route("/categories/<int:category_id>/questions", methods=['GET'])
@@ -208,7 +154,7 @@ def create_app(test_config=None):
                 "current_category": curren_category.type
             })
         except:
-            abort(400)
+            abort(404)
 
     # curl http://127.0.0.1:5000/categories
     @app.route("/categories", methods=['GET'])
@@ -221,37 +167,9 @@ def create_app(test_config=None):
             "categories": categories_dic
         })
 
-    # curl -d '{ "name":"Java" , "auth":"Antony222" , "rate":"2" }' -H "Content-Type: application/json" -X POST http://127.0.0.1:5000/add
-    @app.route("/add", methods=["GET", "POST"])
-    def add_test():
-        body_allData = request.get_json()
 
-        question = body_allData.get("question", None)
-        answer = body_allData.get("answer", None)
-        difficulty = body_allData.get("difficulty", None)
-        category = body_allData.get("category", None)
 
-        print(question)
 
-        return jsonify({
-            "success": True,
-            "qu": question,
-            "ans": answer,
-            "diff": difficulty,
-            "cat": category
-        })
-
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
-
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  '''
 
     # curl -d '{ "previous_questions":"[2,3,4,5,16,17,18,9,11,12,41,37]" , "quiz_category" :"{type: "History", id: "4"}"}' -H "Content-Type: application/json" -X POST http://127.0.0.1:5000/quizzes
     @app.route("/quizzes", methods=['GET', 'POST'])
@@ -265,12 +183,12 @@ def create_app(test_config=None):
 
         if int(quiz_category['id']) > 0:
             query1 = Question.query.filter_by(category=quiz_category['id']).all()
-            for n in query1:
-                query_ids.append(n.id)
+            for quary_ele in query1:
+                query_ids.append(quary_ele.id)
         else:
             query1 = Question.query.all()
-            for n in query1:
-                query_ids.append(n.id)
+            for quary_ele in query1:
+                query_ids.append(quary_ele.id)
 
         if len(previous_questions_arr) > 0:
             for x in previous_questions_arr:
@@ -279,27 +197,32 @@ def create_app(test_config=None):
         differences = set(query_ids) - set(previous_id)
         new_ids = list(differences)
 
-        rand = random.randint(0, len(new_ids))
+        rand = random.randint(0, len(new_ids) - 1)
         selected_id = new_ids[rand]
 
-        new_question = Question.query.get(selected_id)
-        new_question_dic = {
-            "id": new_question.id,
-            "question": new_question.question,
-            "answer": new_question.answer,
-            "category": new_question.category,
-            "difficulty": new_question.difficulty,
-        }
+        if len(new_ids) - 1 > 0:
+            new_question = Question.query.get(selected_id)
+            new_question_dic = {
+                "id": new_question.id,
+                "question": new_question.question,
+                "answer": new_question.answer,
+                "category": new_question.category,
+                "difficulty": new_question.difficulty,
+            }
+        else:
+            new_question_dic = {
+                "id": 0,
+                "question": "Sorry, there is no more questions",
+                "answer": '',
+                "category": 0,
+                "difficulty": 0,
+            }
+
         return jsonify({
             "success": True,
             "question": new_question_dic
         })
 
-    '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
 
     @app.errorhandler(404)
     def not_found(error):
@@ -317,12 +240,5 @@ def create_app(test_config=None):
             "message": "unprocessable"
         }), 422
 
-    @app.errorhandler(400)
-    def bad_request(error):
-        return jsonify({
-            "success": False,
-            "error": 400,
-            "message": "bad request"
-        }), 400
 
     return app
