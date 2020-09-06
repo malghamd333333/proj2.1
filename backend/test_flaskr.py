@@ -14,7 +14,7 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "test1_test"
+        self.database_name = "test1"
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
 
@@ -31,6 +31,7 @@ class TriviaTestCase(unittest.TestCase):
             "difficulty": "2",
         }
         self.searchTerm = {"searchTerm": "what"}
+
 
         # binds the app to the current context
         with self.app.app_context():
@@ -80,8 +81,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
 
-
-
     def test_delete_question(self):
         res = self.client().delete('/questionsdelete/36')
         data = json.loads(res.data)
@@ -121,8 +120,6 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-
-
 
 
 # Make the tests conveniently executable

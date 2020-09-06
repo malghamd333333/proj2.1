@@ -210,13 +210,9 @@ def create_app(test_config=None):
                 "difficulty": new_question.difficulty,
             }
         else:
-            new_question_dic = {
-                "id": 0,
-                "question": "Sorry, there is no more questions",
-                "answer": '',
-                "category": 0,
-                "difficulty": 0,
-            }
+            return jsonify({
+                "success": False,
+            })
 
         return jsonify({
             "success": True,
@@ -239,6 +235,14 @@ def create_app(test_config=None):
             "error": 422,
             "message": "unprocessable"
         }), 422
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return jsonify({
+            "success": False,
+            "error": 500,
+            "message": "Internal server error"
+        }), 500
 
 
     return app
